@@ -1,0 +1,4 @@
+GOOS=linux GOARCH=arm64 go build -o bootstrap main.go
+zip function.zip bootstrap
+aws lambda create-function --function-name aa-go-lambda-demo --runtime provided.al2 --zip-file fileb://function.zip --handler bootstrap --role arn:aws:iam::xxxxxxxxxxx:role/aa-lambda-exec-role
+aws lambda update-function-code --function-name aa-go-lambda-demo --runtime provided.al2 --zip-file fileb://function.zip --handler bootstrap
