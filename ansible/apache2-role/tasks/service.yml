@@ -1,0 +1,15 @@
+- name: Disable prefork MPM (if enabled)
+  command: a2dismod mpm_prefork
+  register: disable_prefork
+  failed_when: false
+  changed_when: "'Module mpm_prefork disabled' in disable_prefork.stdout"
+
+- name: Enable event MPM
+  command: a2enmod mpm_event
+  register: enable_event
+  changed_when: "'Module mpm_event enabled' in enable_event.stdout"
+- name: Ensure Apache is running
+  service:
+    name: "{{ apache_service }}"
+    state: started
+    enabled: true

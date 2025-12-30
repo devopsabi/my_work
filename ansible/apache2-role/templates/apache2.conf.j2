@@ -1,0 +1,9 @@
+ServerRoot "/etc/apache2"
+Listen {{ apache_port }}
+
+ServerAdmin {{ apache_server_admin }}
+
+<Directory />
+    AllowOverride None
+    Require all denied
+</Directory>

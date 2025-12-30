@@ -1,0 +1,5 @@
+- name: Configure Apache main config
+  template:
+    src: apache2.conf.j2
+    dest: /etc/apache2/apache2.conf
+  notify: Restart Apache

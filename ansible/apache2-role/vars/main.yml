@@ -1,0 +1,9 @@
+ansible_ssh_private_key_file: ~/Documents/prepartion/Kafka-MKS/ec2-user.pem
+#apache_package: apache2
+apache_service: apache2
+packages:
+  - apache2
+  - php
+  - php-fpm
+  - curl
+  - unzip
