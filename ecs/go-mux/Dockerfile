@@ -20,11 +20,25 @@ FROM alpine:latest
 
 # Add certificates for applications that make HTTPS requests
 RUN apk --no-cache add ca-certificates
+RUN apk add --no-cache shadow
 
-WORKDIR /root/
+ARG USERNAME=go-user
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN groupadd --gid $USER_GID $USERNAME 
+RUN useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
+
+WORKDIR /app
 
 # Copy only the compiled binary from the builder stage
 COPY --from=builder /app/main .
+
+# 
+RUN chown -R $USER_UID:$USER_GID /app/
+
+#
+USER $USERNAME
 
 # Expose the port your app runs on
 EXPOSE 8080
