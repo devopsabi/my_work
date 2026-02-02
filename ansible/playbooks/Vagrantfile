@@ -1,0 +1,41 @@
+Vagrant.configure("2") do |config|
+  # We define a list of our 3 VMs and their specific IP addresses
+  vms = [
+    { name: "node-1", ip: "192.168.1.20" },
+    { name: "node-2", ip: "192.168.1.21" },
+    { name: "node-3", ip: "192.168.1.22" }
+  ]
+
+  vms.each do |machine|
+    config.vm.define machine[:name] do |node|
+#    node.vm.provision "shell", inline: <<-SHELL
+#      # Ensure the directory exists
+#      mkdir -p /usr/local/share/ca-certificates/extra
+#
+#      # Copy the CA from the shared /vagrant folder (where your project files live)
+#      if [ -f "/vagrant/MyRootCA.pem" ]; then
+#        cp /vagrant/MyRootCA.pem /usr/local/share/ca-certificates/extra/MyRootCA.crt
+#        update-ca-certificates
+#        echo "CA Certificate added and trusted."
+#      else
+#        echo "CA Certificate not found in /vagrant folder."
+#      fi
+#    SHELL
+      # Use the latest Ubuntu 22.04 LTS box
+      node.vm.box = "ubuntu/jammy64"
+      
+      # Set a private network IP so they can talk to each other
+      node.vm.network "private_network", ip: machine[:ip]
+      
+      # Optional: Set hostnames so the command prompt is easy to read
+      node.vm.hostname = machine[:name]
+
+      # Provider-specific settings (VirtualBox)
+      node.vm.provider "virtualbox" do |vb|
+        vb.memory = "1024" # 1GB RAM per VM
+        vb.cpus = 1
+        vb.name = machine[:name] # How it appears in VirtualBox GUI
+      end
+    end
+  end
+end
