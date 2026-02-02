@@ -1,0 +1,10 @@
+---
+postgres_version: 18
+postgres_listen_addresses: "0.0.0.0"
+postgres_user: postgres
+postgres_password: xxxx
+postgres_db: test
+postgres_port: 5432
+allow_remote_connections: true
+postgres_repo: "deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+postgres_repo_key_url: "https://www.postgresql.org/media/keys/ACCC4CF8.asc"

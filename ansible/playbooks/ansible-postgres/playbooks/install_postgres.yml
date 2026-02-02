@@ -1,0 +1,107 @@
+---
+- name: Install and configure PostgreSQL on Ubuntu
+  hosts: db_servers
+  become: yes
+  become_method: sudo  
+  vars_files:
+    - ../group_vars/db_servers.yml
+
+  tasks:
+    - name: Ensure apt cache is up to date
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install prerequisite packages
+      apt:
+        name:
+          - wget
+          - gnupg
+          - lsb-release
+          - apt-transport-https
+        state: present
+        update_cache: yes
+
+    - name: Add PostgreSQL APT repository key
+      apt_key:
+        url: "{{ postgres_repo_key_url }}"
+        state: present
+
+    - name: APostgreSQL APT repository
+      apt_repository:
+        repo: "{{ postgres_repo }}"
+        state: present
+        filename: postgresql
+
+    - name: Update apt cache after adding repository
+      apt:
+        update_cache: yes
+
+    - name: Ensure psycopg2 is installed
+      pip:
+        name: psycopg2-binary
+        state: present
+
+    - name: Install PostgreSQL and dependencies
+      become: yes
+      become_method: sudo
+      apt:
+        name:
+          - postgresql-{{ postgres_version }}
+          - postgresql-contrib-{{ postgres_version }}
+        state: present
+
+    - name: Ensure PostgreSQL service is enabled and running
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Configure PostgreSQL to listen on specified addresses
+      lineinfile:
+        path: /etc/postgresql/{{ postgres_version }}/main/postgresql.conf
+        regexp: '^#?listen_addresses\s*='
+        line: "listen_addresses = '{{ postgres_listen_addresses }}'"
+      notify: Restart PostgreSQL
+
+    - name: Configure PostgreSQL port
+      lineinfile:
+        path: /etc/postgresql/{{ postgres_version }}/main/postgresql.conf
+        regexp: '^#?port\s*='
+        line: "port = {{ postgres_port }}"
+      notify: Restart PostgreSQL
+
+    - name: Allow remote connections if enabled
+      when: allow_remote_connections
+      lineinfile:
+        path: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
+        line: "host    all             all             0.0.0.0/0            md5"
+        create: yes
+      notify: Restart PostgreSQL
+
+    - name: Create PostgreSQL user
+      become: yes
+      become_user: postgres
+      community.postgresql.postgresql_user:
+        name: "{{ postgres_user }}"
+        password: "{{ postgres_password }}"
+        role_attr_flags: CREATEDB
+
+    - name: Create PostgreSQL database
+      become_user: postgres
+      postgresql_db:
+        name: "{{ postgres_db }}"
+        owner: "{{ postgres_user }}"
+
+    - name: Enable firewall rule for PostgreSQL
+      when: allow_remote_connections
+      ufw:
+        rule: allow
+        port: "{{ postgres_port }}"
+        proto: tcp
+
+  handlers:
+    - name: Restart PostgreSQL
+      service:
+        name: postgresql
+        state: restarted
